@@ -1,0 +1,294 @@
+{
+  "version": 1,
+  "company": "HRI",
+  "lastUpdated": "manual",
+  "executiveRoles": ["admin", "executive"],
+  "departments": {
+    "program_management": {
+      "name": "Program Management",
+      "icon": "📋"
+    },
+    "gc_ops": {
+      "name": "GC Operations",
+      "icon": "🏗️"
+    },
+    "steel_thermal": {
+      "name": "Steel & Thermal",
+      "icon": "🔧"
+    },
+    "preconstruction": {
+      "name": "Preconstruction",
+      "icon": "📐"
+    },
+    "compliance": {
+      "name": "EHS-QA / Compliance",
+      "icon": "🛡️"
+    },
+    "administration": {
+      "name": "Administration",
+      "icon": "📊"
+    },
+    "it": {
+      "name": "Information Technology",
+      "icon": "💻"
+    }
+  },
+  "users": {
+    "bhansen@hansen-rice.com": {
+      "name": "Burke Hansen",
+      "roles": ["executive"],
+      "departments": ["all"],
+      "artifactIds": ["all"],
+      "landingPage": "executive_home"
+    }
+  },
+  "defaultUser": {
+    "name": "Employee",
+    "roles": ["employee"],
+    "departments": [],
+    "artifactIds": [],
+    "landingPage": "employee_home"
+  },
+  "artifacts": [
+    {
+      "id": "program_management_utilization",
+      "name": "Employee Utilization",
+      "department": "program_management",
+      "source": "Timecard / PM Utilization",
+      "type": "claude_artifact",
+      "refreshCycle": "biweekly",
+      "description": "Program Management employee utilization dashboard.",
+      "url": "https://claude.ai/artifacts/latest/23072389-e6ba-4c3a-8d6f-20ab9d2b9e64",
+      "status": "active",
+      "allowedRoles": ["admin", "executive", "program_management"]
+    },
+    {
+      "id": "program_management_pipeline",
+      "name": "Pipeline Tracker",
+      "department": "program_management",
+      "source": "Pipeline chat",
+      "type": "claude_artifact",
+      "refreshCycle": "biweekly",
+      "description": "Pipeline tracker showing sold work, active pipeline, and probability detail.",
+      "url": "https://claude.ai/artifacts/latest/0588692d-84d8-4c74-b0dc-6b44e1e60ca4",
+      "status": "active",
+      "allowedRoles": ["admin", "executive", "program_management"]
+    },
+    {
+      "id": "program_management_weekly_huddle",
+      "name": "Weekly Huddle Insights",
+      "department": "program_management",
+      "source": "Weekly Huddle",
+      "type": "claude_artifact",
+      "refreshCycle": "weekly",
+      "description": "Weekly huddle insights for Program Management.",
+      "url": "https://claude.ai/artifacts/latest/8ebf452f-f248-41f6-b73f-d2fe68d337d1",
+      "status": "active",
+      "allowedRoles": ["admin", "executive", "program_management"]
+    },
+    {
+      "id": "program_management_marketing",
+      "name": "Marketing Data",
+      "department": "program_management",
+      "source": "Marketing",
+      "type": "claude_artifact",
+      "refreshCycle": "monthly",
+      "description": "Marketing data and insights.",
+      "url": "https://claude.ai/artifacts/latest/df2276bc-da35-4ac7-80c5-f086478b242b",
+      "status": "active",
+      "allowedRoles": ["admin", "executive", "program_management"]
+    },
+    {
+      "id": "program_management_budget",
+      "name": "Program Management Budget",
+      "department": "program_management",
+      "source": "Power BI",
+      "type": "powerbi",
+      "refreshCycle": "monthly",
+      "description": "Program Management budget dashboard.",
+      "url": "https://app.powerbi.com/groups/dc822024-208a-400c-9568-ca433f2bbae3/reports/2b778946-4593-4f0c-8b32-4bc7fed13abc/5f3da8e02577a54587c6?experience=power-bi",
+      "status": "active",
+      "allowedRoles": ["admin", "executive", "program_management"]
+    },
+    {
+      "id": "gc_ops_staffing_forecast",
+      "name": "Staffing Forecast",
+      "department": "gc_ops",
+      "source": "GC Ops chat",
+      "type": "claude_artifact",
+      "refreshCycle": "biweekly",
+      "description": "GC Operations staffing forecast and PM resource planning.",
+      "url": "https://claude.ai/artifacts/latest/798ed6a2-96cc-48fc-a4b4-ecdb25664dc5",
+      "status": "active",
+      "allowedRoles": ["admin", "executive", "gc_ops"]
+    },
+    {
+      "id": "gc_ops_utilization",
+      "name": "GC Utilization",
+      "department": "gc_ops",
+      "source": "GC Utilization",
+      "type": "claude_artifact",
+      "refreshCycle": "biweekly",
+      "description": "GC Operations utilization dashboard.",
+      "url": "https://claude.ai/artifacts/latest/6a3f80f8-0500-4cbd-9a47-64acf6069150",
+      "status": "active",
+      "allowedRoles": ["admin", "executive", "gc_ops"]
+    },
+    {
+      "id": "gc_ops_budget",
+      "name": "GC Budget",
+      "department": "gc_ops",
+      "source": "GC Budget",
+      "type": "powerbi",
+      "refreshCycle": "monthly",
+      "description": "GC Operations budget dashboard.",
+      "url": "",
+      "status": "coming_soon",
+      "allowedRoles": ["admin", "executive", "gc_ops"]
+    },
+    {
+      "id": "steel_thermal_utilization",
+      "name": "Steel & Thermal Utilization",
+      "department": "steel_thermal",
+      "source": "Steel & Thermal Utilization",
+      "type": "claude_artifact",
+      "refreshCycle": "monthly",
+      "description": "Steel & Thermal utilization dashboard.",
+      "url": "https://claude.ai/artifacts/latest/e09bd5ca-758e-4154-a3b2-aca26307492b",
+      "status": "active",
+      "allowedRoles": ["admin", "executive", "steel_thermal"]
+    },
+    {
+      "id": "steel_thermal_budget",
+      "name": "Steel & Thermal Budget",
+      "department": "steel_thermal",
+      "source": "Steel & Thermal Budget",
+      "type": "powerbi",
+      "refreshCycle": "monthly",
+      "description": "Steel & Thermal budget dashboard.",
+      "url": "",
+      "status": "coming_soon",
+      "allowedRoles": ["admin", "executive", "steel_thermal"]
+    },
+    {
+      "id": "preconstruction_utilization",
+      "name": "Preconstruction Utilization",
+      "department": "preconstruction",
+      "source": "Preconstruction Utilization",
+      "type": "claude_artifact",
+      "refreshCycle": "biweekly",
+      "description": "Preconstruction utilization dashboard.",
+      "url": "https://claude.ai/artifacts/latest/ac5a8541-557c-4eaa-8c9e-060b7f37a4ca",
+      "status": "active",
+      "allowedRoles": ["admin", "executive", "preconstruction"]
+    },
+    {
+      "id": "preconstruction_budget",
+      "name": "Preconstruction Budget",
+      "department": "preconstruction",
+      "source": "Power BI",
+      "type": "powerbi",
+      "refreshCycle": "monthly",
+      "description": "Preconstruction budget dashboard.",
+      "url": "https://app.powerbi.com/groups/dc822024-208a-400c-9568-ca433f2bbae3/reports/2b778946-4593-4f0c-8b32-4bc7fed13abc/5f3da8e02577a54587c6?experience=power-bi",
+      "status": "active",
+      "allowedRoles": ["admin", "executive", "preconstruction"]
+    },
+    {
+      "id": "compliance_employee_utilization",
+      "name": "Employee Utilization",
+      "department": "compliance",
+      "source": "Compliance Utilization",
+      "type": "claude_artifact",
+      "refreshCycle": "biweekly",
+      "description": "Compliance employee utilization dashboard.",
+      "url": "https://claude.ai/artifacts/latest/0e1cbe95-a277-42d5-adea-596d0ffcbd15",
+      "status": "active",
+      "allowedRoles": ["admin", "executive", "compliance"]
+    },
+    {
+      "id": "compliance_metrics",
+      "name": "Compliance Metrics",
+      "department": "compliance",
+      "source": "Compliance Metrics",
+      "type": "claude_artifact",
+      "refreshCycle": "weekly",
+      "description": "Compliance metrics dashboard.",
+      "url": "https://claude.ai/artifacts/latest/89dbd525-3657-42cd-97dd-5888fa879de6",
+      "status": "active",
+      "allowedRoles": ["admin", "executive", "compliance"]
+    },
+    {
+      "id": "compliance_additional_metrics",
+      "name": "Additional Metrics",
+      "department": "compliance",
+      "source": "Power BI",
+      "type": "powerbi",
+      "refreshCycle": "monthly",
+      "description": "Additional compliance metrics.",
+      "url": "https://app.powerbi.com/groups/e489f460-3be2-49b3-9fec-c3bd633852f2/reports/65b0f654-d3a6-4a02-b07c-090dbffedeb6/9ad3073d0c69aa6527a5?experience=power-bi",
+      "status": "active",
+      "allowedRoles": ["admin", "executive", "compliance"]
+    },
+    {
+      "id": "administration_employee_utilization",
+      "name": "Employee Utilization",
+      "department": "administration",
+      "source": "Administration Utilization",
+      "type": "claude_artifact",
+      "refreshCycle": "monthly",
+      "description": "Administration employee utilization dashboard.",
+      "url": "https://claude.ai/artifacts/latest/8da58bc3-f156-49df-be9f-0613531c1be0",
+      "status": "active",
+      "allowedRoles": ["admin", "executive", "administration"]
+    },
+    {
+      "id": "administration_budget",
+      "name": "Administration Budget",
+      "department": "administration",
+      "source": "Administration Budget",
+      "type": "powerbi",
+      "refreshCycle": "monthly",
+      "description": "Administration budget dashboard.",
+      "url": "",
+      "status": "coming_soon",
+      "allowedRoles": ["admin", "executive", "administration"]
+    },
+    {
+      "id": "administration_hr_data",
+      "name": "HR Data",
+      "department": "administration",
+      "source": "HR Data",
+      "type": "claude_artifact",
+      "refreshCycle": "monthly",
+      "description": "HR data dashboard.",
+      "url": "https://claude.ai/artifacts/latest/ea064387-07bf-416c-9b7e-27a937a8783b",
+      "status": "active",
+      "allowedRoles": ["admin", "executive", "administration"]
+    },
+    {
+      "id": "it_employee_utilization",
+      "name": "Employee Utilization",
+      "department": "it",
+      "source": "IT Utilization",
+      "type": "claude_artifact",
+      "refreshCycle": "weekly",
+      "description": "IT employee utilization dashboard.",
+      "url": "https://claude.ai/artifacts/latest/d966d9ad-49f3-4f16-b69d-f6519e066e58",
+      "status": "active",
+      "allowedRoles": ["admin", "executive", "it"]
+    },
+    {
+      "id": "it_budget",
+      "name": "IT Budget",
+      "department": "it",
+      "source": "IT Budget",
+      "type": "powerbi",
+      "refreshCycle": "monthly",
+      "description": "IT budget dashboard.",
+      "url": "",
+      "status": "coming_soon",
+      "allowedRoles": ["admin", "executive", "it"]
+    }
+  ]
+}
