@@ -1,0 +1,6 @@
+.env.supabase.local
+.env.local
+.env
+*.xlsx
+~$*.xlsx
+node_modules/
