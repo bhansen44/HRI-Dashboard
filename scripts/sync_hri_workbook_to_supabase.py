@@ -158,6 +158,19 @@ IGNORED_VISIBLE_EMPLOYEE_TEXT = {
     "n/a",
 }
 
+PROJECT_STAFF_COLUMNS = {
+    "Visible to GC Ops": "gc_ops",
+    "Project Manger": "project_manager",
+    "Project Manager": "project_manager",
+    "Superintendent": "superintendent",
+    "Project Engineer": "project_engineer",
+    "Designer": "designer",
+    "Estimator": "estimator",
+}
+
+EMAIL_RE = re.compile(r"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}", re.IGNORECASE)
+
+
 def clean(value):
     if value is None:
         return ""
@@ -191,6 +204,129 @@ def split_tokens(value):
 
 def normalize_email(value):
     return clean_lower(value)
+
+def normalize_person_key(value):
+    value = clean_lower(value)
+    value = value.replace(",", " ")
+    value = re.sub(r"[^a-z0-9@.\s-]+", " ", value)
+    value = re.sub(r"\s+", " ", value).strip()
+    return value
+
+def employee_name_keys(name):
+    key = normalize_person_key(name)
+    if not key:
+        return set()
+
+    parts = [p for p in key.split(" ") if p]
+    keys = {key}
+
+    if len(parts) >= 2:
+        keys.add(f"{parts[0]} {parts[-1]}")
+        keys.add(f"{parts[-1]} {parts[0]}")
+
+    return keys
+
+def build_employee_lookup(ws):
+    by_name = {}
+    by_email = {}
+
+    for row in sheet_rows(ws):
+        email = normalize_email(row.get("Email address"))
+        name = clean(row.get("Employee_Name"))
+
+        if not email or not name:
+            continue
+
+        by_email[email] = {
+            "email": email,
+            "name": name,
+        }
+
+        for key in employee_name_keys(name):
+            by_name.setdefault(key, set()).add(email)
+
+    resolved_by_name = {
+        key: next(iter(emails))
+        for key, emails in by_name.items()
+        if len(emails) == 1
+    }
+
+    ambiguous_by_name = {
+        key: sorted(emails)
+        for key, emails in by_name.items()
+        if len(emails) > 1
+    }
+
+    return {
+        "by_email": by_email,
+        "by_name": resolved_by_name,
+        "ambiguous_by_name": ambiguous_by_name,
+    }
+
+def split_people_cell(value):
+    raw = clean(value)
+
+    if not raw:
+        return [], []
+
+    emails = [normalize_email(email) for email in EMAIL_RE.findall(raw)]
+    raw_without_emails = EMAIL_RE.sub(" ", raw)
+
+    name_tokens = [
+        token.strip()
+        for token in re.split(r"[,;\n\r|]+", raw_without_emails)
+        if token and token.strip()
+    ]
+
+    return sorted(set(emails)), name_tokens
+
+def project_staff_rules(project_id, staff_values, employee_lookup):
+    rules = set()
+    unresolved = []
+
+    for column_name, cell_value in staff_values.items():
+        role_key = PROJECT_STAFF_COLUMNS.get(column_name, slug(column_name))
+        emails, name_tokens = split_people_cell(cell_value)
+
+        for email in emails:
+            rules.add((project_id, "employee", email))
+
+        for name_token in name_tokens:
+            key = normalize_person_key(name_token)
+
+            if not key:
+                continue
+
+            if key in IGNORED_VISIBLE_EMPLOYEE_TEXT:
+                continue
+
+            if key in employee_lookup["by_name"]:
+                rules.add((project_id, "employee", employee_lookup["by_name"][key]))
+                continue
+
+            if key in employee_lookup["ambiguous_by_name"]:
+                unresolved.append({
+                    "project_id": project_id,
+                    "column": column_name,
+                    "role_key": role_key,
+                    "value": name_token,
+                    "reason": "ambiguous_name",
+                    "matches": employee_lookup["ambiguous_by_name"][key],
+                })
+                rules.add((project_id, "employee_name_review", f"{role_key}:{name_token}"))
+                continue
+
+            unresolved.append({
+                "project_id": project_id,
+                "column": column_name,
+                "role_key": role_key,
+                "value": name_token,
+                "reason": "no_employee_match",
+                "matches": [],
+            })
+            rules.add((project_id, "employee_name_review", f"{role_key}:{name_token}"))
+
+    return rules, unresolved
 
 def map_raw_department(raw):
     return RAW_DEPARTMENT_MAP.get(clean_lower(raw), (None, None))
@@ -400,8 +536,9 @@ def build_employees_and_access(ws):
     ]
     return employees, dashboard_rows, card_rows
 
-def parse_project_access(project_id, program_id, visible_to_raw, visible_to_employees_raw):
+def parse_project_access(project_id, program_id, visible_to_raw, visible_to_employees_raw, staff_values, employee_lookup):
     rules = set()
+    unresolved = []
     visible_to = clean_lower(visible_to_raw)
 
     if "program" in visible_to and program_id:
@@ -426,33 +563,78 @@ def parse_project_access(project_id, program_id, visible_to_raw, visible_to_empl
 
     visible_employees = clean_lower(visible_to_employees_raw)
     if visible_employees not in IGNORED_VISIBLE_EMPLOYEE_TEXT:
-        for token in split_tokens(visible_to_employees_raw):
-            if "@" in token:
-                rules.add((project_id, "employee", normalize_email(token)))
-            else:
-                rules.add((project_id, "employee_name_review", token))
+        emails, name_tokens = split_people_cell(visible_to_employees_raw)
 
-    return [
+        for email in emails:
+            rules.add((project_id, "employee", email))
+
+        for name_token in name_tokens:
+            key = normalize_person_key(name_token)
+
+            if not key:
+                continue
+
+            if key in employee_lookup["by_name"]:
+                rules.add((project_id, "employee", employee_lookup["by_name"][key]))
+            elif key in employee_lookup["ambiguous_by_name"]:
+                unresolved.append({
+                    "project_id": project_id,
+                    "column": "Visible to employees",
+                    "role_key": "visible_to_employees",
+                    "value": name_token,
+                    "reason": "ambiguous_name",
+                    "matches": employee_lookup["ambiguous_by_name"][key],
+                })
+                rules.add((project_id, "employee_name_review", f"visible_to_employees:{name_token}"))
+            else:
+                unresolved.append({
+                    "project_id": project_id,
+                    "column": "Visible to employees",
+                    "role_key": "visible_to_employees",
+                    "value": name_token,
+                    "reason": "no_employee_match",
+                    "matches": [],
+                })
+                rules.add((project_id, "employee_name_review", f"visible_to_employees:{name_token}"))
+
+    staff_rules, staff_unresolved = project_staff_rules(project_id, staff_values, employee_lookup)
+    rules.update(staff_rules)
+    unresolved.extend(staff_unresolved)
+
+    rows = [
         {"project_id": project_id, "access_type": access_type, "access_value": value}
         for project_id, access_type, value in sorted(rules)
     ]
 
-def build_projects(ws):
+    return rows, unresolved
+
+def build_projects(ws, employee_lookup):
     projects = []
     access_rules = []
+    unresolved_project_people = []
+
     for row in sheet_rows(ws):
         program_code = clean(row.get("Program"))
         program_name = clean(row.get("__blank_2"))
         job_number = clean(row.get("Job Number"))
         job_name = clean(row.get("Job Name"))
+
         if not job_number or not job_name:
             continue
+
         if job_number.endswith(".0"):
             job_number = job_number[:-2]
+
         program_id = PROJECT_PROGRAM_MAP.get(clean_lower(program_name), slug(program_name))
         project_id = f"project_{slug(job_number)}"
         visible_to_raw = clean(row.get("Visible to"))
         visible_to_employees_raw = clean(row.get("Visible to employees"))
+
+        staff_values = {}
+        for column_name in PROJECT_STAFF_COLUMNS:
+            if column_name in row:
+                staff_values[column_name] = row.get(column_name)
+
         projects.append({
             "project_id": project_id,
             "program_code": program_code or None,
@@ -465,8 +647,19 @@ def build_projects(ws):
             "visible_to_employees_raw": visible_to_employees_raw or None,
             "updated_at": datetime.now(timezone.utc).isoformat(),
         })
-        access_rules.extend(parse_project_access(project_id, program_id, visible_to_raw, visible_to_employees_raw))
-    return projects, access_rules
+
+        project_rules, unresolved = parse_project_access(
+            project_id,
+            program_id,
+            visible_to_raw,
+            visible_to_employees_raw,
+            staff_values,
+            employee_lookup,
+        )
+        access_rules.extend(project_rules)
+        unresolved_project_people.extend(unresolved)
+
+    return projects, access_rules, unresolved_project_people
 
 def main():
     wb = load_workbook(WORKBOOK_PATH, data_only=True)
@@ -476,8 +669,9 @@ def main():
         raise SystemExit(f"Workbook is missing sheets: {missing}")
 
     artifacts = build_artifacts(wb["Artifact Map"])
+    employee_lookup = build_employee_lookup(wb["EMP List"])
     employees, dashboard_access, card_access = build_employees_and_access(wb["EMP List"])
-    projects, project_access = build_projects(wb["Project Map"])
+    projects, project_access, unresolved_project_people = build_projects(wb["Project Map"], employee_lookup)
 
     summary = {
         "mode": "dry_run" if DRY_RUN else "supabase_sync",
@@ -489,10 +683,18 @@ def main():
         "employee_card_access_rules": len(card_access),
         "projects": len(projects),
         "project_access_rules": len(project_access),
+        "project_employee_access_rules": sum(1 for rule in project_access if rule["access_type"] == "employee"),
+        "project_unresolved_staff_entries": len(unresolved_project_people),
     }
 
     if DRY_RUN:
         print(json.dumps(summary, indent=2))
+        if unresolved_project_people:
+            print("\nProject staff entries needing review:")
+            for item in unresolved_project_people[:50]:
+                print(json.dumps(item, indent=2))
+            if len(unresolved_project_people) > 50:
+                print(f"... {len(unresolved_project_people) - 50} additional unresolved entries not shown")
         print("\nDry run complete. No Supabase data was changed.")
         return
 
